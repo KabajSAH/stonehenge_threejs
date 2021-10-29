@@ -234,6 +234,9 @@
 			    if(SPACE)camera.translateY(move_speed);
 			    if(SHIFT)camera.translateY(-move_speed);
 
+				//Camera COllision with the ground
+			    if (camera.position.y < 3)camera.position.y = 3;
+
 			}
 
 
