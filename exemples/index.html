@@ -16,6 +16,8 @@
 
 			let stone = []; // tableau
 
+			let wireframe = false;
+
 			let spotLight, lightHelper, shadowCameraHelper, gui; // Lumières
 
 			const listener = new THREE.AudioListener();
@@ -140,6 +142,7 @@
 			    // PILIERS
 			    for (let i = 0; i < max_ext; i++) {
 			        stone.push(new THREE.Mesh(geometry_ext, material_ext));
+                    stone[i].material.wireframe = false;
 			        stone[i].receiveShadow = true;
 			        stone[i].castShadow = true;
 			        stone[i].position.x = espacement * max_ext * Math.cos(i * Math.PI*2 / max_ext);
@@ -152,6 +155,7 @@
 			    // DALLES
 			    for (let i = 0; i < max_ext; i++) {
 			        stone.push(new THREE.Mesh(geometry_ext, material_ext));
+                    stone[i + max_ext].material.wireframe = false;
 			        stone[i + max_ext].receiveShadow = true;
 			        stone[i+ max_ext].castShadow = true;
 			        stone[i + max_ext].position.y = 87.5;
@@ -396,8 +400,12 @@
                     angle: spotLight.angle,
                     penumbra: spotLight.penumbra,
                     decay: spotLight.decay,
-                    focus: spotLight.shadow.focus
+                    focus: spotLight.shadow.focus,
+	                wireframe: wireframe
                 };
+
+
+                console.log(params);
 
                 gui.addColor( params, 'light color' ).onChange( function ( val ) {
 
@@ -442,6 +450,9 @@
 
                 } );
 
+                gui.add( params, 'wireframe').onChange(function (val) {
+                    wireframe = val;
+                });
                 gui.open();
 
             }
