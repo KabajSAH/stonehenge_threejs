@@ -408,7 +408,6 @@
                 };
 
 
-                console.log(params);
 
                 gui.addColor( params, 'light color' ).onChange( function ( val ) {
 
@@ -455,7 +454,6 @@
 
                 gui.add( params, 'wireframe').onChange(function (val) {
                     wireframe = val;
-                    console.log(stone);
                     stone.map((e)=>{
 	                    if(e instanceof THREE.Group){
                             e.children.map((g) => {
