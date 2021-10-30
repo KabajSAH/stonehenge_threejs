@@ -120,9 +120,10 @@
 			    // SOL
 			    const grass = new THREE.TextureLoader().load('./textures/ground.jpg'); // texture du sol
 			    const materialGeo = new THREE.MeshPhongMaterial({map: grass}); // matériau basé sur cette texture
-			    const groundGeo = new THREE.PlaneGeometry(2000, 2000); // dimensions du sol
+			    const groundGeo = new THREE.BoxGeometry(2000,0.1, 4000); // dimensions du sol
+
 			    const ground = new THREE.Mesh(groundGeo, materialGeo); // création du sol avec les dimensions et le matériau
-			    ground.rotation.x = - Math.PI * 0.5;
+			    ground.rotation.y = - Math.PI * 0.5;
 			    ground.position.y = 0;
 			    ground.receiveShadow = true;
 			    scene.add(ground);
