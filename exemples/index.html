@@ -454,12 +454,12 @@
 
                 gui.add( params, 'wireframe').onChange(function (val) {
                     wireframe = val;
-                    stone.map((e)=>{
-	                    if(e instanceof THREE.Group){
+                    stone.map((e)=>{                                //map permet d'effectuer une fonction sur chaque élément d'un tableau
+	                    if(e instanceof THREE.Group){               //si l'élément est un groupe, on refait un map sur la liste des enfants de ce groupe
                             e.children.map((g) => {
-                                g.material.wireframe = wireframe;
+                                g.material.wireframe = wireframe;   //on active ou désactive le wireframe sur les enfants du groupe
                             })
-	                    }else
+	                    }else                                       //Sinon, si ce n'est pas un groupe, on considère que c'est un Mesh
                             e.material.wireframe = wireframe;
                     })
                 });
