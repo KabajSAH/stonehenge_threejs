@@ -34,7 +34,7 @@
 			let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false, RIGHT = false, SPACE = false, SHIFT = false;
 
 			init();
-            buildGui();
+      buildGui();
 			animate();
 
 
@@ -61,13 +61,9 @@
 			    camera.position.set(0, 250, 700); // caméra reculée
 			    camera.rotation.x = -0.4; // caméra regarde vers le bas
 
-			    /* POUR REGARDER EN-DESSOUS */
-			    // camera.position.set(0,-250,700);
-			    // camera.rotation.x = 0.4;
-
 			    scene = new THREE.Scene(); // création d'une scène
 
-			//Lumière
+					//Lumière
 
 			    {
 						  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
@@ -192,7 +188,7 @@
 
 			        stoneGroup.position.set(2 * espacement * max_int * Math.cos(i * Math.PI / (max_int / 2)), 60, 2 * espacement * max_int * Math.sin(i * Math.PI / (max_int / 2)));
 			        stoneGroup.rotation.y = Math.PI / 2 - i * Math.PI / (max_int / 2);
-					stone.push(stoneGroup);
+							stone.push(stoneGroup);
 			        scene.add(stoneGroup);
 			    }
 
@@ -212,7 +208,7 @@
                     }
 
 			}
-			//test skyboc selim
+			// SKYBOX SELIM
 
 				let materialArray = [];
 				let texture_ft = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
@@ -333,6 +329,7 @@
 						 sound.setBuffer( buffer );
 						 sound.setLoop( true );
 						 sound.setVolume( 0.2 );
+						 sound.setPlaybackRate(1);
 						 sound.play();
 					 });
 			    }
@@ -397,14 +394,15 @@
                 gui = new GUI();
 
                 const params = {
-                    'light color': spotLight.color.getHex(),
-                    intensity: spotLight.intensity,
-                    distance: spotLight.distance,
-                    angle: spotLight.angle,
-                    penumbra: spotLight.penumbra,
-                    decay: spotLight.decay,
-                    focus: spotLight.shadow.focus,
-	                wireframe: wireframe
+		                'light color': spotLight.color.getHex(),
+		                intensity: spotLight.intensity,
+		                distance: spotLight.distance,
+		                angle: spotLight.angle,
+		                penumbra: spotLight.penumbra,
+		                decay: spotLight.decay,
+		                focus: spotLight.shadow.focus,
+			              wireframe: wireframe,
+										'music speed': sound.setPlaybackRate
                 };
 
 
@@ -463,6 +461,11 @@
                             e.material.wireframe = wireframe;
                     })
                 });
+
+								gui.add( params, 'music speed', 0.1, 2 ).onChange( function ( val ) {
+										sound.setPlaybackRate(val);
+								})
+
                 gui.open();
 
             }
