@@ -452,6 +452,9 @@
 
                 gui.add( params, 'wireframe').onChange(function (val) {
                     wireframe = val;
+                    stone.map((e)=>{
+                        e.material.wireframe = wireframe;
+                    })
                 });
                 gui.open();
 
