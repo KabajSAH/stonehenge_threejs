@@ -192,7 +192,7 @@
 
 			        stoneGroup.position.set(2 * espacement * max_int * Math.cos(i * Math.PI / (max_int / 2)), 60, 2 * espacement * max_int * Math.sin(i * Math.PI / (max_int / 2)));
 			        stoneGroup.rotation.y = Math.PI / 2 - i * Math.PI / (max_int / 2);
-
+					stone.push(stoneGroup);
 			        scene.add(stoneGroup);
 			    }
 
@@ -206,7 +206,10 @@
 			        small_stone.castShadow = true;
 			        small_stone.position.set(espacement/5 * max_small * Math.cos(i * Math.PI / (max_small/2)), 10, espacement/5 * max_small * Math.sin(i * Math.PI / (max_small/2)));
 			        small_stone.rotation.y = Math.PI / 2 - i * Math.PI / (max_small/2);
-			        if(Math.floor(Math.random() * 3) !== 0)scene.add(small_stone);
+			        if(Math.floor(Math.random() * 3) !== 0){
+                        stone.push(small_stone);
+                        scene.add(small_stone);
+                    }
 
 			}
 			//test skyboc selim
@@ -452,8 +455,14 @@
 
                 gui.add( params, 'wireframe').onChange(function (val) {
                     wireframe = val;
+                    console.log(stone);
                     stone.map((e)=>{
-                        e.material.wireframe = wireframe;
+	                    if(e instanceof THREE.Group){
+                            e.children.map((g) => {
+                                g.material.wireframe = wireframe;
+                            })
+	                    }else
+                            e.material.wireframe = wireframe;
                     })
                 });
                 gui.open();
