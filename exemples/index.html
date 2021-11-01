@@ -28,8 +28,8 @@
 			const max_ext = 20; // nombre de pierres à l'extérieur
 			const max_small = 80; // nombre de petites pierres
 			const espacement = 40/3;
-			const rotate_speed = Math.PI/100; // Vitesse de rotation de la caméra
 
+			let rotate_speed = Math.PI/100; // Vitesse de rotation de la caméra
 			let move_speed = 4; // Vitesse de déplacement de la caméra
 
 			let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false, RIGHT = false, SPACE = false, SHIFT = false;
@@ -404,6 +404,7 @@
 		                focus: spotLight.shadow.focus,
 						wireframe: wireframe,
 						cameraSpeed: move_speed,
+						cameraRotation: rotate_speed,
 	                    'music speed': sound.playbackRate
                 };
 
@@ -466,6 +467,10 @@
 
 				gui.add(params, 'cameraSpeed', 0.1, 10).onChange(function (val){
 					move_speed = val;
+				});
+
+				gui.add(params, 'cameraRotation', 0.1, 0.99).onChange(function (val){
+					rotate_speed = Math.PI/((1-val)*100);
 				});
 
 				gui.add( params, 'music speed', 0.1, 2 ).onChange( function ( val ) {
