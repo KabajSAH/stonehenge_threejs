@@ -28,8 +28,9 @@
 			const max_ext = 20; // nombre de pierres à l'extérieur
 			const max_small = 80; // nombre de petites pierres
 			const espacement = 40/3;
-			const move_speed = 4; // Vitesse de déplacement de la caméra
 			const rotate_speed = Math.PI/100; // Vitesse de rotation de la caméra
+
+			let move_speed = 4; // Vitesse de déplacement de la caméra
 
 			let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false, RIGHT = false, SPACE = false, SHIFT = false;
 
@@ -263,7 +264,7 @@
 			    if(SPACE)camera.translateY(move_speed);
 			    if(SHIFT)camera.translateY(-move_speed);
 
-				//Camera COllision with the ground
+				//Camera Collision with the ground
 			    if (camera.position.y < 3)camera.position.y = 3;
 
 			}
@@ -401,7 +402,8 @@
 		                penumbra: spotLight.penumbra,
 		                decay: spotLight.decay,
 		                focus: spotLight.shadow.focus,
-			              wireframe: wireframe,
+						wireframe: wireframe,
+						cameraSpeed: move_speed,
 	                    'music speed': sound.playbackRate
                 };
 
@@ -462,9 +464,13 @@
                     })
                 });
 
-								gui.add( params, 'music speed', 0.1, 2 ).onChange( function ( val ) {
-										sound.setPlaybackRate(val);
-								})
+				gui.add(params, 'cameraSpeed', 0.1, 10).onChange(function (val){
+					move_speed = val;
+				});
+
+				gui.add( params, 'music speed', 0.1, 2 ).onChange( function ( val ) {
+					sound.setPlaybackRate(val);
+				})
 
                 gui.open();
 
