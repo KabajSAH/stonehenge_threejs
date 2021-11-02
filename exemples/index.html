@@ -28,13 +28,14 @@
 			const max_ext = 20; // nombre de pierres à l'extérieur
 			const max_small = 80; // nombre de petites pierres
 			const espacement = 40/3;
-			const move_speed = 4; // Vitesse de déplacement de la caméra
-			const rotate_speed = Math.PI/100; // Vitesse de rotation de la caméra
+
+			let rotate_speed = Math.PI/100; // Vitesse de rotation de la caméra
+			let move_speed = 4; // Vitesse de déplacement de la caméra
 
 			let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false, RIGHT = false, SPACE = false, SHIFT = false;
 
 			init();
-            buildGui();
+      buildGui();
 			animate();
 
 
@@ -61,13 +62,9 @@
 			    camera.position.set(0, 250, 700); // caméra reculée
 			    camera.rotation.x = -0.4; // caméra regarde vers le bas
 
-			    /* POUR REGARDER EN-DESSOUS */
-			    // camera.position.set(0,-250,700);
-			    // camera.rotation.x = 0.4;
-
 			    scene = new THREE.Scene(); // création d'une scène
 
-			//Lumière
+					//Lumière
 
 			    {
 						  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
@@ -212,7 +209,7 @@
                     }
 
 			}
-			//test skyboc selim
+			// SKYBOX SELIM
 
 				let materialArray = [];
 				let texture_ft = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
@@ -267,7 +264,7 @@
 			    if(SPACE)camera.translateY(move_speed);
 			    if(SHIFT)camera.translateY(-move_speed);
 
-				//Camera COllision with the ground
+				//Camera Collision with the ground
 			    if (camera.position.y < 3)camera.position.y = 3;
 
 			}
@@ -333,6 +330,7 @@
 						 sound.setBuffer( buffer );
 						 sound.setLoop( true );
 						 sound.setVolume( 0.2 );
+						 sound.setPlaybackRate(1);
 						 sound.play();
 					 });
 			    }
@@ -397,14 +395,17 @@
                 gui = new GUI();
 
                 const params = {
-                    'light color': spotLight.color.getHex(),
-                    intensity: spotLight.intensity,
-                    distance: spotLight.distance,
-                    angle: spotLight.angle,
-                    penumbra: spotLight.penumbra,
-                    decay: spotLight.decay,
-                    focus: spotLight.shadow.focus,
-	                wireframe: wireframe
+		                'light color': spotLight.color.getHex(),
+		                intensity: spotLight.intensity,
+		                distance: spotLight.distance,
+		                angle: spotLight.angle,
+		                penumbra: spotLight.penumbra,
+		                decay: spotLight.decay,
+		                focus: spotLight.shadow.focus,
+						wireframe: wireframe,
+						cameraSpeed: move_speed,
+						cameraRotation: rotate_speed,
+	                    'music speed': sound.playbackRate
                 };
 
 
@@ -454,15 +455,28 @@
 
                 gui.add( params, 'wireframe').onChange(function (val) {
                     wireframe = val;
-                    stone.map((e)=>{                                //map permet d'effectuer une fonction sur chaque élément d'un tableau
-	                    if(e instanceof THREE.Group){               //si l'élément est un groupe, on refait un map sur la liste des enfants de ce groupe
+                    stone.map((e)=>{
+	                    if(e instanceof THREE.Group){
                             e.children.map((g) => {
-                                g.material.wireframe = wireframe;   //on active ou désactive le wireframe sur les enfants du groupe
+                                g.material.wireframe = wireframe;
                             })
-	                    }else                                       //Sinon, si ce n'est pas un groupe, on considère que c'est un Mesh
+	                    }else
                             e.material.wireframe = wireframe;
                     })
                 });
+
+				gui.add(params, 'cameraSpeed', 0.01, 10).onChange(function (val){
+					move_speed = val;
+				});
+
+				gui.add(params, 'cameraRotation', 0.1, 0.99).onChange(function (val){
+					rotate_speed = Math.PI/((1-val)*100);
+				});
+
+				gui.add( params, 'music speed', 0.1, 2 ).onChange( function ( val ) {
+					sound.setPlaybackRate(val);
+				})
+
                 gui.open();
 
             }
