@@ -465,11 +465,11 @@
                     })
                 });
 
-				gui.add(params, 'cameraSpeed', 0.01, 1).onChange(function (val){
+				gui.add(params, 'cameraSpeed', 0.1, 10).onChange(function (val){
 					move_speed = val;
 				});
 
-				gui.add(params, 'cameraRotation', 0.1, 0.99).onChange(function (val){
+				gui.add(params, 'cameraRotation', 0.01, 0.99).onChange(function (val){
 					rotate_speed = Math.PI/((1-val)*100);
 				});
 
