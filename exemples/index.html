@@ -34,6 +34,9 @@
 
 			let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false, RIGHT = false, SPACE = false, SHIFT = false;
 
+			import { FBXLoader } from '../jsm/FBXLoader.js';
+			let object;
+
 			init();
       buildGui();
 			animate();
@@ -97,8 +100,15 @@
 			    controls.maxDistance = 2000;
 			    controls.enablePan = false;
 
-			    // PARAMETRES DES PIERRES + SOL
 
+					// Importation du modèle 3D
+					loader.load( './models/AudiR8.fbx', function ( object ) {
+    			scene.add( object );
+					} );
+
+
+
+			    // PARAMETRES DES PIERRES + SOL
 
 			    // EXTERIEUR
 			    const stone_ext = new THREE.TextureLoader().load('./textures/stone.png');	// texture des pierres à l'extérieur
