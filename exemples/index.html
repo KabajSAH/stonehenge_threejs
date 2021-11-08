@@ -17,6 +17,7 @@
             import {MMDAnimationHelper} from "../animation/MMDAnimationHelper.js";
             import { OutlineEffect } from '../effects/OutlineEffect.js';
             import Stats from "../libs/stats.module.js";
+						import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/GLTFLoader.js";
 
 
 
@@ -124,6 +125,15 @@
 			    controls.maxDistance = 2000;
 			    controls.enablePan = false;
                 controls.maxPolarAngle = 85 * Math.PI / 180; //Maximum de rotation inférieur de 85 degrés
+
+								// Importation GLTF de JUL
+								const loader = new GLTFLoader();
+								loader.load('./models/gltf/scene.gltf', (gltf) => {
+									gltf.scene.traverse(c => {
+										c.castShadow = true;
+									})
+									this.scene.add(gltf.scene);
+								});
 
 			    // PARAMETRES DES PIERRES + SOL
 
