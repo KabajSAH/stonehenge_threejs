@@ -7,9 +7,16 @@
 		<link type="text/css" rel="stylesheet" href="main.css">
 	</head>
 	<body>
-		<div id="overlay" style="background: url(./textures/Stonehenge.jpg) no-repeat center fixed; background-size: 100%;">
-			<button id="startButton">Play</button>
-		</div>
+			
+		
+		<div id="content" class="content">
+			<video autoplay muted loop id="myVideo">
+				<source src="./videos/Stonehenge.m4v" type="video/mp4">
+			</video>
+			<!-- Use a button to pause/play the video with JavaScript -->
+			<button id="myBtn">Play</button>  
+		  </div>
+
 		<div id="container"></div>
 		<script src="../libs/ammo.wasm.js"></script>
 		<script type="module">
@@ -44,9 +51,9 @@
 			const sound = new THREE.Audio( listener );
 			const audioLoader = new THREE.AudioLoader();
 			const startButton = document.getElementById( 'startButton' );
-			startButton.addEventListener( 'click', init);
-			startButton.addEventListener( 'click', buildGui);
-			startButton.addEventListener( 'click', animate);
+			myBtn.addEventListener( 'click', init);
+			myBtn.addEventListener( 'click', buildGui);
+			myBtn.addEventListener( 'click', animate);
 
             const clock = new THREE.Clock();
 
@@ -73,8 +80,8 @@
 
 			function init() {
 
-				const overlay = document.getElementById( 'overlay' );
-				overlay.remove();
+				const content = document.getElementById( 'content' );
+				content.remove();
 
 			    //Initialisation du moteur de rendu
 			    renderer = new THREE.WebGLRenderer({antialias: true});
