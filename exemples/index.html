@@ -213,6 +213,14 @@
 
 			    // PARAMETRES DES PIERRES + SOL
 
+					// Importation du modèle 3D
+					loader.load( './models/AudiR8.fbx', function ( object ) {
+    			scene.add( object );
+					} );
+
+
+
+			    // PARAMETRES DES PIERRES + SOL
 
 			    // EXTERIEUR
 			    const stone_ext = new THREE.TextureLoader().load('./textures/stone.png');	// texture des pierres à l'extérieur
