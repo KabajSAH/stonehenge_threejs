@@ -7,14 +7,14 @@
 		<link type="text/css" rel="stylesheet" href="main.css">
 	</head>
 	<body>
-			
-		
+
+
 		<div id="content" class="content">
 			<video autoplay muted loop id="myVideo">
 				<source src="./videos/Stonehenge.m4v" type="video/mp4">
 			</video>
 			<!-- Use a button to pause/play the video with JavaScript -->
-			<button id="myBtn">Play</button>  
+			<button id="myBtn">Play</button>
 		  </div>
 
 		<div id="container"></div>
@@ -22,30 +22,22 @@
 		<script type="module">
 			import * as THREE from '../build/three.module.js'; // importation de THREE
 			import { OrbitControls } from "../jsm/OrbitControls.js";
-            import {GUI} from "../jsm/dat.gui.module.js";
-            import {MMDLoader} from "../jsm/MMDLoader.js";
-            import {MMDAnimationHelper} from "../animation/MMDAnimationHelper.js";
+      import {GUI} from "../jsm/dat.gui.module.js";
+      import {MMDLoader} from "../jsm/MMDLoader.js";
+      import {MMDAnimationHelper} from "../animation/MMDAnimationHelper.js";
 			import { GLTFLoader } from '../jsm/GLTFLoader.js';
 			import { RoughnessMipmapper } from '/jsm/RoughnessMipmapper.js';
-            import { OutlineEffect } from '../effects/OutlineEffect.js';
-            import Stats from "../libs/stats.module.js";
+      import { OutlineEffect } from '../effects/OutlineEffect.js';
+      import Stats from "../libs/stats.module.js";
 
 
 
-            let camera, scene, renderer, stats; // moteur de rendu web
-
+      let camera, scene, renderer, stats; // moteur de rendu web
 			let stone = []; // tableau
-
 			let wireframe = false;
-
 			let spotLight, lightHelper, shadowCameraHelper, gui; // Lumières
-
-      let helper, ikHelper, physicsHelper;
-
-			let meshMMD, effect;
-
+      let helper, ikHelper, physicsHelper, meshMMD, effect;
 			let mixer;
-
 
 			const listener = new THREE.AudioListener();
 			const sound = new THREE.Audio( listener );
@@ -55,7 +47,7 @@
 			myBtn.addEventListener( 'click', buildGui);
 			myBtn.addEventListener( 'click', animate);
 
-            const clock = new THREE.Clock();
+      const clock = new THREE.Clock();
 
 			const max_int = 5; // nombre de pierres à l'intérieur
 			const max_ext = 20; // nombre de pierres à l'extérieur
@@ -93,8 +85,8 @@
 
                 //Stats
 
-				stats = new Stats();
-                document.getElementById("container").appendChild( stats.dom );
+					stats = new Stats();
+          document.getElementById("container").appendChild( stats.dom );
 
 			    // Gestion des ombres
 			    renderer.shadowMap.enabled = true;
@@ -144,31 +136,38 @@
 			    controls.minDistance = 10;
 			    controls.maxDistance = 2000;
 			    controls.enablePan = false;
-                controls.maxPolarAngle = 85 * Math.PI / 180; //Maximum de rotation inférieur de 85 degrés
+          controls.maxPolarAngle = 85 * Math.PI / 180; //Maximum de rotation inférieur de 85 degrés
+
+
+
+								// Modèle 1 animé
 
 								const roughnessMipmapper = new RoughnessMipmapper( renderer );
 
-								const loader = new GLTFLoader().setPath( 'models/gltf/Soldier/glTF/' );
-								loader.load( 'scene.gltf', function ( gltf ) {
+								const loader = new GLTFLoader();
+								loader.load( 'models/gltf/TEST.gltf', function ( gltf ) {
+
+									scene.add( gltf.scene );
+
+	                mixer = new THREE.AnimationMixer( gltf.scene );
+	                gltf.animations.forEach((clip) => {
+	                    mixer.clipAction(clip).play();
+	                });
 
 									gltf.scene.traverse( function ( child ) {
 
 										if ( child.isMesh ) {
-
 											roughnessMipmapper.generateMipmaps( child.material );
 											child.castShadow = true;
 											child.receiveShadow = true;
-
 										}
-
 									} );
 
-									gltf.scene.scale.set(30,30,30);
-									gltf.scene.position.x = -60;
-									gltf.scene.rotation.y += Math.PI/2;
+									gltf.scene.position.x = 70;
 									gltf.scene.position.y = -1;
-
-									scene.add( gltf.scene );
+									gltf.scene.position.z = 40;
+									gltf.scene.rotation.y -= Math.PI/2;
+									gltf.scene.scale.set(60, 60, 60);
 
 									roughnessMipmapper.dispose();
 
@@ -176,35 +175,34 @@
 
 								} );
 
-								const loader2 = new GLTFLoader();
 
-								loader2.load( 'models/gltf/TEST.gltf', function ( gltf2 ) {
+
+								// Modèle 2 statique
+
+								const roughnessMipmapper2 = new RoughnessMipmapper( renderer );
+
+								const loader2 = new GLTFLoader().setPath( 'models/gltf/Soldier/glTF/' );
+								loader2.load( 'scene.gltf', function ( gltf2 ) {
 
 									gltf2.scene.traverse( function ( child ) {
 
 										if ( child.isMesh ) {
-
-											roughnessMipmapper.generateMipmaps( child.material );
+											roughnessMipmapper2.generateMipmaps( child.material );
 											child.castShadow = true;
 											child.receiveShadow = true;
-
 										}
-
 									} );
 
-									gltf2.scene.scale.set(60, 60, 60);
-
-									gltf2.scene.position.x = 70;
+									gltf2.scene.scale.set(30,30,30);
+									gltf2.scene.position.x = -60;
+									gltf2.scene.rotation.y += Math.PI/2;
 									gltf2.scene.position.y = -1;
-									gltf2.scene.position.z = 40;
-									gltf2.scene.rotation.y -= Math.PI/2;
-
 
 									scene.add( gltf2.scene );
 
-								}, undefined, function ( error ) {
+									roughnessMipmapper2.dispose();
 
-									console.log("error");
+									animate();
 
 								} );
 
@@ -429,10 +427,15 @@
 			}
 
 			function animate() {
+
           stats.begin();
 			    requestAnimationFrame(animate);
 
-			    renderer.render(scene, camera);
+					var delta = clock.getDelta();
+
+					if (mixer) mixer.update(delta);
+
+					renderer.render( scene, camera );
 
 			    if(W)camera.translateZ(-move_speed);
 			    if(A)camera.translateX(-move_speed);
