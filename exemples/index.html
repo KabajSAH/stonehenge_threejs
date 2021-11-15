@@ -8,7 +8,10 @@
 	</head>
 	<body>
 
-
+		<audio id="geddan" preload="auto" style="display: none">
+			<source src="sounds/geddan.mp3" type="audio/mpeg">
+		</audio>
+		
 		<div id="content" class="content">
 			<video autoplay muted loop id="myVideo">
 				<source src="./videos/Stonehenge.m4v" type="video/mp4">
@@ -41,6 +44,7 @@
 
 			const listener = new THREE.AudioListener();
 			const sound = new THREE.Audio( listener );
+            const geddan_sound = new THREE.PositionalAudio(listener);
 			const audioLoader = new THREE.AudioLoader();
 			const startButton = document.getElementById( 'startButton' );
 			myBtn.addEventListener( 'click', init);
@@ -381,7 +385,15 @@
 						 meshMMD.scale.set(3, 3, 3);
 	                     meshMMD.castShadow = true;
                          meshMMD.receiveShadow = true;
+
+                         const geddan_element = document.getElementById("geddan");
+                         geddan_sound.setMediaElementSource(geddan_element);
+                         geddan_sound.setRefDistance(20);
+                         geddan_element.play();
+                         geddan_element.loop = true;
+
                          scene.add( meshMMD );
+                         meshMMD.add(geddan_sound);
 						//
                          helper.add( meshMMD, {
                              animation: mmd.animation,
@@ -414,6 +426,9 @@
                      }
 						//
                  );
+
+
+
 
 			}
 
