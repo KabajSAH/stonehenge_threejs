@@ -1,738 +1,762 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>TP1</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, max_intimum-scale=1.0">
-		<link type="text/css" rel="stylesheet" href="main.css">
-	</head>
-	<body>
+<head>
+	<title>TP1</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, max_intimum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="main.css">
+</head>
+<body>
 
-		<audio id="geddan" preload="auto" style="display: none">
-			<source src="sounds/geddan.mp3" type="audio/mpeg">
-		</audio>
-		
-		<div id="content" class="content">
-			<video autoplay muted loop id="myVideo">
-				<source src="./videos/Stonehenge.m4v" type="video/mp4">
-			</video>
-			<!-- Use a button to pause/play the video with JavaScript -->
-			<button id="myBtn">Play</button>
-		  </div>
+<audio id="geddan" preload="auto" style="display: none">
+	<source src="sounds/geddan.mp3" type="audio/mpeg">
+</audio>
 
-		<div id="container"></div>
-		<script src="../libs/ammo.wasm.js"></script>
-		<script type="module">
-			import * as THREE from '../build/three.module.js'; // importation de THREE
-			import { OrbitControls } from "../jsm/OrbitControls.js";
-      import {GUI} from "../jsm/dat.gui.module.js";
-      import {MMDLoader} from "../jsm/MMDLoader.js";
-      import {MMDAnimationHelper} from "../animation/MMDAnimationHelper.js";
-			import { GLTFLoader } from '../jsm/GLTFLoader.js';
-			import { RoughnessMipmapper } from '/jsm/RoughnessMipmapper.js';
-      import { OutlineEffect } from '../effects/OutlineEffect.js';
-      import Stats from "../libs/stats.module.js";
+<div id="content" class="content">
+	<video autoplay muted loop id="myVideo">
+		<source src="./videos/Stonehenge.m4v" type="video/mp4">
+	</video>
+	<!-- Use a button to pause/play the video with JavaScript -->
+	<button id="myBtn">Play</button>
+</div>
 
-
+<div id="container"></div>
+<script src="../libs/ammo.wasm.js"></script>
+<script type="module">
+    import * as THREE from '../build/three.module.js'; // importation de THREE
+    import {OrbitControls} from "../jsm/OrbitControls.js";
+    import {GUI} from "../jsm/dat.gui.module.js";
+    import {MMDLoader} from "../jsm/MMDLoader.js";
+    import {MMDAnimationHelper} from "../animation/MMDAnimationHelper.js";
+    import {GLTFLoader} from '../jsm/GLTFLoader.js';
+    import {RoughnessMipmapper} from '/jsm/RoughnessMipmapper.js';
+    import {OutlineEffect} from '../effects/OutlineEffect.js';
+    import Stats from "../libs/stats.module.js";
 
-      let camera, scene, renderer, stats; // moteur de rendu web
-			let stone = []; // tableau
-			let wireframe = false;
-			let spotLight, lightHelper, shadowCameraHelper, gui; // Lumières
-      let helper, ikHelper, physicsHelper, meshMMD, effect;
-			let mixer;
-
-			const listener = new THREE.AudioListener();
-			const sound = new THREE.Audio( listener );
-            const geddan_sound = new THREE.PositionalAudio(listener);
-			const audioLoader = new THREE.AudioLoader();
-			const startButton = document.getElementById( 'startButton' );
-			myBtn.addEventListener( 'click', init);
-			myBtn.addEventListener( 'click', buildGui);
-			myBtn.addEventListener( 'click', animate);
 
-      const clock = new THREE.Clock();
+    let camera, scene, renderer, stats; // moteur de rendu web
+    let stone = []; // tableau
+    let wireframe = false;
+    let spotLight, lightHelper, shadowCameraHelper, gui; // Lumières
+    let helper, ikHelper, physicsHelper, meshMMD, effect;
+    let mixer;
 
-			const max_int = 5; // nombre de pierres à l'intérieur
-			const max_ext = 20; // nombre de pierres à l'extérieur
-			const max_small = 80; // nombre de petites pierres
-			const espacement = 40/3;
+    const listener = new THREE.AudioListener();
+    const sound = new THREE.Audio(listener);
+    const geddan_sound = new THREE.PositionalAudio(listener);
+    const audioLoader = new THREE.AudioLoader();
+    const myBtn = document.getElementById('myBtn');
 
-			let rotate_speed = Math.PI/100; // Vitesse de rotation de la caméra
-			let move_speed = 4; // Vitesse de déplacement de la caméra
 
-			let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false, RIGHT = false, SPACE = false, SHIFT = false;
 
-			Ammo().then( function ( AmmoLib ) {
+    myBtn.addEventListener('click', () => {Ammo().then(function (AmmoLib) {
 
-                Ammo = AmmoLib;
+        Ammo = AmmoLib;
 
-                //init();
-                //buildGui();
-                //animate();
+        init();
+        buildGui();
+        animate();
 
-            } );
+    })});
 
 
-			function init() {
 
-				const content = document.getElementById( 'content' );
-				content.remove();
 
-			    //Initialisation du moteur de rendu
-			    renderer = new THREE.WebGLRenderer({antialias: true});
-			    renderer.setPixelRatio(window.devicePixelRatio);
-			    renderer.setSize(window.innerWidth, window.innerHeight);
-			    document.body.appendChild(renderer.domElement);
+    const clock = new THREE.Clock();
 
-                effect = new OutlineEffect( renderer );
+    const max_int = 5; // nombre de pierres à l'intérieur
+    const max_ext = 20; // nombre de pierres à l'extérieur
+    const max_small = 80; // nombre de petites pierres
+    const espacement = 40 / 3;
 
-                //Stats
+    let rotate_speed = Math.PI / 100; // Vitesse de rotation de la caméra
+    let move_speed = 4; // Vitesse de déplacement de la caméra
 
-					stats = new Stats();
-          document.getElementById("container").appendChild( stats.dom );
+    let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false,
+        RIGHT = false, SPACE = false, SHIFT = false;
 
-			    // Gestion des ombres
-			    renderer.shadowMap.enabled = true;
-			    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-			    renderer.outputEncoding = THREE.sRGBEncoding;
 
-			    window.addEventListener('resize', onWindowResize);
 
-			    // SETUP DE LA CAMERA + SCENE
 
-			    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000); // FOV 20, aspect ratio adapté à la fenêtre, distance d'affichage 1 à 10000
+    function init() {
 
-			    camera.position.set(0, 250, 700); // caméra reculée
-			    camera.rotation.x = -0.4; // caméra regarde vers le bas
+        const content = document.getElementById('content');
+        content.remove();
 
-			    scene = new THREE.Scene(); // création d'une scène
+        initialConfig();
 
-					//Lumière
+        //Lumière
 
-			    {
-						  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-			        scene.add( ambient );
+        buildLight();
 
-			        spotLight = new THREE.SpotLight( 0xFFFFFF, 2 );
-							spotLight.position.set( 1500, 2000, 0 );
-			        spotLight.angle = Math.PI / 4;
-			        spotLight.penumbra = 0.4;
-			        spotLight.decay = 2;
-			        spotLight.distance = 6000;
 
-			        spotLight.castShadow = true;
-			        spotLight.shadow.mapSize.width = 1024;
-			        spotLight.shadow.mapSize.height = 1024;
-			        spotLight.shadow.camera.near = 10;
-			        spotLight.shadow.camera.far = 200;
-			        spotLight.shadow.focus = 1;
-			        scene.add( spotLight );
-			    }
+        // Audio Listener
+        camera.add(listener);
 
 
-					// Audio Listener
-					camera.add( listener );
+        // OrbitControls
+		startOrbitControls();
 
 
-			    // OrbitControls
-			    const controls = new OrbitControls( camera, renderer.domElement );
-			    controls.minDistance = 10;
-			    controls.maxDistance = 2000;
-			    controls.enablePan = false;
-          controls.maxPolarAngle = 85 * Math.PI / 180; //Maximum de rotation inférieur de 85 degrés
 
+        buildMainScene();
 
+        // Modèle 1 animé
 
-								// Modèle 1 animé
+        loadGLTF1();
 
-								const roughnessMipmapper = new RoughnessMipmapper( renderer );
 
-								const loader = new GLTFLoader();
-								loader.load( 'models/gltf/TEST.gltf', function ( gltf ) {
+        // Modèle 2 statique
 
-									scene.add( gltf.scene );
+		loadGLTF2();
 
-	                mixer = new THREE.AnimationMixer( gltf.scene );
-	                gltf.animations.forEach((clip) => {
-	                    mixer.clipAction(clip).play();
-	                });
 
-									gltf.scene.traverse( function ( child ) {
 
-										if ( child.isMesh ) {
-											roughnessMipmapper.generateMipmaps( child.material );
-											child.castShadow = true;
-											child.receiveShadow = true;
-										}
-									} );
 
-									gltf.scene.position.x = 70;
-									gltf.scene.position.y = -1;
-									gltf.scene.position.z = 40;
-									gltf.scene.rotation.y -= Math.PI/2;
-									gltf.scene.scale.set(60, 60, 60);
+        // SKYBOX SELIM
 
-									roughnessMipmapper.dispose();
+        buildSkybox();
 
-									animate();
 
-								} );
+        // Load a MMD model
 
+        buildMMDModel();
 
 
-								// Modèle 2 statique
+    }
 
-								const roughnessMipmapper2 = new RoughnessMipmapper( renderer );
+    function onWindowResize() {
 
-								const loader2 = new GLTFLoader().setPath( 'models/gltf/Soldier/glTF/' );
-								loader2.load( 'scene.gltf', function ( gltf2 ) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
 
-									gltf2.scene.traverse( function ( child ) {
+        renderer.setSize(window.innerWidth, window.innerHeight);
 
-										if ( child.isMesh ) {
-											roughnessMipmapper2.generateMipmaps( child.material );
-											child.castShadow = true;
-											child.receiveShadow = true;
-										}
-									} );
+    }
 
-									gltf2.scene.scale.set(30,30,30);
-									gltf2.scene.position.x = -60;
-									gltf2.scene.rotation.y += Math.PI/2;
-									gltf2.scene.position.y = -1;
+    function animate() {
 
-									scene.add( gltf2.scene );
+        stats.begin();
 
-									roughnessMipmapper2.dispose();
+        let delta = clock.getDelta();
 
-									animate();
+        if (mixer) mixer.update(delta); //update the GLTF model
+        helper.update(delta);   //update the MMD model
 
-								} );
+        //renderer.render(scene, camera);   //apparemment on en avait plus besoin mais je laisse au cas où, on sait jamais
 
+		doomLikeCamera();   //doomLike ça sonne bien, et puis Doom ça utilisait deux sets de touches pour la camera donc ça me paraît approprié
 
+        //Camera Collision with the ground
+        if (camera.position.y < 3) camera.position.y = 3;
 
+        effect.render(scene,camera);
 
-			    // PARAMETRES DES PIERRES + SOL
+        stats.end();
 
-					// Importation du modèle 3D
-					loader.load( './models/AudiR8.fbx', function ( object ) {
-    			scene.add( object );
-					} );
+    }
 
 
+    //déplacement de la camera
 
-			    // PARAMETRES DES PIERRES + SOL
+    //à l'appui
+    document.addEventListener("keydown", (e) => {
+        switch (e.code) {
+            //PERMET DE DEPLACER LA CAMERA DANS LE PLAN
+            case 'KeyW':
+                W = true;
+                break;
+            case 'KeyA':
+                A = true;
+                break;
+            case 'KeyS':
+                S = true;
+                break;
+            case 'KeyD':
+                D = true;
+                break;
 
-			    // EXTERIEUR
-			    const stone_ext = new THREE.TextureLoader().load('./textures/stone.png');	// texture des pierres à l'extérieur
-			    const material_ext = new THREE.MeshPhongMaterial({map: stone_ext}); 			// matériau basé sur cette texture
-			    const geometry_ext = new THREE.BoxGeometry(30, 80, 15); 					// forme des pierres à l'extérieur
+            //PERMET DE TOURNER LA CAMERA DANS LE PLAN
+            case 'ArrowUp':
+                UP = true;
+                break;
+            case 'ArrowLeft':
+                LEFT = true;
+                break;
+            case 'ArrowDown':
+                DOWN = true;
+                break;
+            case 'ArrowRight':
+                RIGHT = true;
+                break;
+            case 'KeyQ':
+                Q = true;
+                break;
+            case 'KeyE':
+                E = true;
+                break;
 
-			    // INTERIEUR
-			    const stone_int = new THREE.TextureLoader().load('./textures/stone.png'); // texture des pierres à l'intérieur
-			    const material_int = new THREE.MeshPhongMaterial({map: stone_int}); // matériau basé sur cette texture
-			    const tallStone_int = new THREE.BoxGeometry(30, 120, 20); // forme des pierres verticales à l'intérieur
-			    const longStone_int = new THREE.BoxGeometry(60, 20, 30); // forme des pierres horizontales à l'intérieur
 
-			    // MINIPIERRES
-			    const stone_small = new THREE.TextureLoader().load('./textures/stone.png');
-			    const material_small = new THREE.MeshPhongMaterial({map: stone_small});
-			    const geometry_small = new THREE.BoxGeometry(8,20,4);
+            //PERMET DE MONTER ET DESCENDRE DANS LE PLAN
+            case 'Space':
+                SPACE = true;
+                break;
+            case 'ShiftLeft':
+                SHIFT = true;
+                break;
 
-			    // SOL
-			    const grass = new THREE.TextureLoader().load('./textures/ground.jpg'); // texture du sol
-			    const materialGeo = new THREE.MeshPhongMaterial({map: grass}); // matériau basé sur cette texture
-			    const groundGeo = new THREE.BoxGeometry(1000,0.1, 1250); // dimensions du sol
 
-					grass.wrapS = THREE.RepeatWrapping;
-					grass.wrapT = THREE.RepeatWrapping;
-					grass.repeat.set( 50, 62.5 );
+            //REMETTRE LES POSITIONS DE DEPART
+            case 'KeyR':
+                camera.position.set(0, 250, 700);
+                camera.rotation.set(-0.4, 0, 0);
+                break;
 
-			    const ground = new THREE.Mesh(groundGeo, materialGeo); // création du sol avec les dimensions et le matériau
-			    ground.rotation.y = - Math.PI * 0.5;
-			    ground.position.y = 0;
-			    ground.receiveShadow = true;
-			    scene.add(ground);
-
-					spotLight.target.position.x = ground.position.x;
-					spotLight.target.position.z = ground.position.z;
-
-			    //SKYBOX
-			    scene.background = new THREE.TextureLoader().load('./textures/sky3.png') // ajout du ciel
-
-
-			    // PIERRES DE L'EXTERIEUR
-
-			    // PILIERS
-			    for (let i = 0; i < max_ext; i++) {
-			        stone.push(new THREE.Mesh(geometry_ext, material_ext));
-                    stone[i].material.wireframe = false;
-			        stone[i].receiveShadow = true;
-			        stone[i].castShadow = true;
-			        stone[i].position.x = espacement * max_ext * Math.cos(i * Math.PI*2 / max_ext);
-			        stone[i].position.y = 40
-			        stone[i].position.z = espacement * max_ext * Math.sin(i * Math.PI*2 / max_ext);
-			        stone[i].rotation.y = Math.PI / 2 - i * Math.PI*2 / max_ext;
-			        scene.add(stone[i]);
-			    }
-
-			    // DALLES
-			    for (let i = 0; i < max_ext; i++) {
-			        stone.push(new THREE.Mesh(geometry_ext, material_ext));
-                    stone[i + max_ext].material.wireframe = false;
-			        stone[i + max_ext].receiveShadow = true;
-			        stone[i+ max_ext].castShadow = true;
-			        stone[i + max_ext].position.y = 87.5;
-			        stone[i + max_ext].position.x = espacement * max_ext * Math.cos((i + 0.5) * Math.PI*2 / max_ext);
-			        stone[i + max_ext].position.z = espacement * max_ext * Math.sin((i + 0.5) * Math.PI*2 / max_ext);
-			        stone[i + max_ext].rotation.x += Math.PI/2;
-			        stone[i + max_ext].rotation.z = (i + 0.5) * Math.PI*2 / max_ext;
-			        scene.add(stone[i + max_ext]);
-			    }
-
-
-			    // PIERRES DE L'INTERIEUR
-
-			    for (let i = 1; i < max_int; i++) {
-
-			        let stone1 = new THREE.Mesh(tallStone_int, material_int);
-			        stone1.position.set(35, 0, 0);
-			        stone1.receiveShadow = true;
-			        stone1.castShadow = true;
-			        let stone2 = new THREE.Mesh(tallStone_int, material_int);
-			        stone2.position.set(-35, 0, 0);
-			        stone2.receiveShadow = true;
-			        stone2.castShadow = true;
-			        let stone3 = new THREE.Mesh(longStone_int, material_int);
-			        stone3.position.set(0, 70, 0);
-			        stone3.receiveShadow = true;
-			        stone3.castShadow = true;
-
-			        let stoneGroup = new THREE.Group();
-
-			        stoneGroup.add(stone1);
-			        stoneGroup.add(stone2);
-			        stoneGroup.add(stone3);
-
-			        stoneGroup.position.set(2 * espacement * max_int * Math.cos(i * Math.PI / (max_int / 2)), 60, 2 * espacement * max_int * Math.sin(i * Math.PI / (max_int / 2)));
-			        stoneGroup.rotation.y = Math.PI / 2 - i * Math.PI / (max_int / 2);
-							stone.push(stoneGroup);
-			        scene.add(stoneGroup);
-			    }
-
-			//Petites pierres
-
-			for (let i = 0; i < max_small; i++){
-
-
-			        const small_stone = new THREE.Mesh(geometry_small, material_small);
-			        small_stone.receiveShadow = true;
-			        small_stone.castShadow = true;
-			        small_stone.position.set(espacement/5 * max_small * Math.cos(i * Math.PI / (max_small/2)), 10, espacement/5 * max_small * Math.sin(i * Math.PI / (max_small/2)));
-			        small_stone.rotation.y = Math.PI / 2 - i * Math.PI / (max_small/2);
-			        if(Math.floor(Math.random() * 3) !== 0){
-                        stone.push(small_stone);
-                        scene.add(small_stone);
-                    }
-
-			}
-			// SKYBOX SELIM
-
-				let materialArray = [];
-				let texture_ft = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
-				let texture_bk = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
-				let texture_up = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
-				let texture_dn = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
-				let texture_rt = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
-				let texture_lf = new THREE.TextureLoader().load( './textures/skyseamless.jpg');
-
-				materialArray.push(new THREE.MeshBasicMaterial( { map: texture_ft }));
-				materialArray.push(new THREE.MeshBasicMaterial( { map: texture_bk }));
-				materialArray.push(new THREE.MeshBasicMaterial( { map: texture_up }));
-				materialArray.push(new THREE.MeshBasicMaterial( { map: texture_dn }));
-				materialArray.push(new THREE.MeshBasicMaterial( { map: texture_rt }));
-				materialArray.push(new THREE.MeshBasicMaterial( { map: texture_lf }));
-
-				for (let i = 0; i < 6; i++)
-					materialArray[i].side = THREE.BackSide;
-
-				let skyboxGeo = new THREE.BoxGeometry( 10000, 10000, 10000);
-				let skybox = new THREE.Mesh( skyboxGeo, materialArray );
-				scene.add( skybox );
-
-
-
-
-
-				// Load a MMD model
-
-                 helper = new MMDAnimationHelper( {
-                     afterglow: 2.0
-                 } );
-						//
-						//
-                 const MMD = new MMDLoader();
-						//
-                 MMD.loadWithAnimation(
-                     // path to PMD/PMX file
-                     'models/猫又おかゆ公式mmd_ver1.0/猫又おかゆ.pmx',
-                     // path to VMD file
-	                 ['animations/Get Down.vmd'],
-            //         // called when the resource is loaded
-                     function ( mmd ) {
-						 meshMMD = mmd.mesh
-						 meshMMD.scale.set(3, 3, 3);
-	                     meshMMD.castShadow = true;
-                         meshMMD.receiveShadow = true;
-
-                         const geddan_element = document.getElementById("geddan");
-                         geddan_sound.setMediaElementSource(geddan_element);
-                         geddan_sound.setRefDistance(20);
-                         geddan_element.play();
-                         geddan_element.loop = true;
-
-                         scene.add( meshMMD );
-                         meshMMD.add(geddan_sound);
-						//
-                         helper.add( meshMMD, {
-                             animation: mmd.animation,
-                             physics: true
-                         } );
-						//
-                        ikHelper = helper.objects.get( meshMMD ).ikSolver.createHelper();
-                         ikHelper.visible = false;
-						 ikHelper.scale.set(3,3,3);
-                         scene.add( ikHelper );
-						//
-                        physicsHelper = helper.objects.get( meshMMD ).physics.createHelper();
-                        physicsHelper.visible = false;
-						 physicsHelper.scale.set(3,3,3);
-                         scene.add( physicsHelper );
-						//
-						//
-                     },
-                     // called when loading is in progresses
-                     function ( xhr ) {
-						//
-                         console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-						//
-                     },
-            //         // called when loading has errors
-                     function () {
-						//
-                         console.log( 'An error happened' );
-						//
-                     }
-						//
-                 );
-
-
-
-
-			}
-
-			function onWindowResize() {
-
-			    camera.aspect = window.innerWidth / window.innerHeight;
-			    camera.updateProjectionMatrix();
-
-			    renderer.setSize(window.innerWidth, window.innerHeight);
-
-			}
-
-			function animate() {
-
-          stats.begin();
-			    requestAnimationFrame(animate);
-
-					var delta = clock.getDelta();
-
-					if (mixer) mixer.update(delta);
-
-					renderer.render( scene, camera );
-
-			    if(W)camera.translateZ(-move_speed);
-			    if(A)camera.translateX(-move_speed);
-			    if(S)camera.translateZ(move_speed);
-			    if(D)camera.translateX(move_speed);
-
-			    if(UP)camera.rotateX(rotate_speed);
-			    if(LEFT)camera.rotateY(rotate_speed);
-			    if(DOWN)camera.rotateX(-rotate_speed);
-			    if(RIGHT)camera.rotateY(-rotate_speed);
-			    if(Q)camera.rotateZ(rotate_speed);
-			    if(E)camera.rotateZ(-rotate_speed);
-
-			    if(SPACE)camera.translateY(move_speed);
-			    if(SHIFT)camera.translateY(-move_speed);
-
-				//Camera Collision with the ground
-			    if (camera.position.y < 3)camera.position.y = 3;
-
-                helper.update( clock.getDelta() );
-
-                stats.end();
-
-			}
-
-
-			//déplacement de la camera
-
-			//à l'appui
-			document.addEventListener("keydown", (e) => {
-			    switch (e.code){
-			//PERMET DE DEPLACER LA CAMERA DANS LE PLAN
-			        case 'KeyW':
-			            W = true;
-			            break;
-			        case 'KeyA':
-			            A = true;
-			            break;
-			        case 'KeyS':
-			            S = true;
-			            break;
-			        case 'KeyD':
-			            D = true;
-			            break;
-
-			//PERMET DE TOURNER LA CAMERA DANS LE PLAN
-			        case 'ArrowUp':
-			            UP = true;
-			            break;
-			        case 'ArrowLeft':
-			            LEFT = true;
-			            break;
-			        case 'ArrowDown':
-			            DOWN = true;
-			            break;
-			        case 'ArrowRight':
-			            RIGHT = true;
-			            break;
-			        case 'KeyQ':
-			            Q = true;
-			            break;
-			        case 'KeyE':
-			            E = true;
-			            break;
-
-
-			//PERMET DE MONTER ET DESCENDRE DANS LE PLAN
-			     case 'Space':
-			            SPACE = true;
-			            break;
-			     case 'ShiftLeft':
-			            SHIFT = true;
-			            break;
-
-
-			        //REMETTRE LES POSITIONS DE DEPART
-			        case 'KeyR':
-			            camera.position.set(0, 250, 700);
-			            camera.rotation.set(-0.4,0,0);
-			            break;
-
-					 case 'KeyY':
-					 audioLoader.load( './sounds/belupacito.mp3', function( buffer ) {
-						 sound.setBuffer( buffer );
-						 sound.setLoop( true );
-						 sound.setVolume( 0.2 );
-						 sound.setPlaybackRate(1);
-						 sound.play();
-					 });
-			    }
-			})
-
-
-			//au relâchement
-			document.addEventListener("keyup", (e) => {
-			    switch (e.code){
-			        //PERMET DE DEPLACER LA CAMERA DANS LE PLAN
-
-			        case 'KeyW':
-			            W = false;
-			            break;
-			        case 'KeyA':
-			            A = false;
-			            break;
-
-			        case 'KeyS':
-			            S = false;
-			            break;
-			        case 'KeyD':
-			            D = false;
-			            break;
-
-			        //PERMET DE TOURNER LA CAMERA DANS LE PLAN
-			        case 'ArrowUp':
-			            UP = false;
-			            break;
-			        case 'ArrowLeft':
-			            LEFT = false;
-			            break;
-			        case 'ArrowDown':
-			            DOWN = false;
-			            break;
-			        case 'ArrowRight':
-			            RIGHT = false;
-			            break;
-			        case 'KeyQ':
-			            Q = false;
-			            break;
-			        case 'KeyE':
-			            E = false;
-			            break;
-
-
-			        //PERMET DE MONTER ET DESCENDRE DANS LE PLAN
-			        case 'Space':
-			            SPACE = false;
-			            break;
-			        case 'ShiftLeft':
-			            SHIFT = false;
-			            break;
-
-			    }
-			})
-
-
-            function buildGui() {
-
-                gui = new GUI();
-
-                const params = {
-		                'light color': spotLight.color.getHex(),
-		                intensity: spotLight.intensity,
-		                distance: spotLight.distance,
-		                angle: spotLight.angle,
-		                penumbra: spotLight.penumbra,
-		                decay: spotLight.decay,
-		                focus: spotLight.shadow.focus,
-						wireframe: wireframe,
-						cameraSpeed: move_speed,
-						cameraRotation: rotate_speed,
-	                    'music speed': sound.playbackRate
-                };
-
-                const api = {
-                    'animation': true,
-                    'ik': true,
-                    'outline': true,
-                    'physics': true,
-                    'show IK bones': false,
-                    'show rigid bodies': false
-                };
-
-
-
-                gui.addColor( params, 'light color' ).onChange( function ( val ) {
-
-                    spotLight.color.setHex( val );
-
-                } );
-
-                gui.add( params, 'intensity', 0, 2 ).onChange( function ( val ) {
-
-                    spotLight.intensity = val;
-
-                } );
-
-
-                gui.add( params, 'distance', 4000, 8000 ).onChange( function ( val ) {
-
-                    spotLight.distance = val;
-
-                } );
-
-                gui.add( params, 'angle', 0, Math.PI / 3 ).onChange( function ( val ) {
-
-                    spotLight.angle = val;
-
-                } );
-
-                gui.add( params, 'penumbra', 0, 1 ).onChange( function ( val ) {
-
-                    spotLight.penumbra = val;
-
-                } );
-
-                gui.add( params, 'decay', 1, 2 ).onChange( function ( val ) {
-
-                    spotLight.decay = val;
-
-                } );
-
-                gui.add( params, 'focus', 0, 1 ).onChange( function ( val ) {
-
-                    spotLight.shadow.focus = val;
-
-                } );
-
-                gui.add( params, 'wireframe').onChange(function (val) {
-                    wireframe = val;
-                    stone.map((e)=>{
-	                    if(e instanceof THREE.Group){
-                            e.children.map((g) => {
-                                g.material.wireframe = wireframe;
-                            })
-	                    }else
-                            e.material.wireframe = wireframe;
-                    })
+            case 'KeyY':
+                audioLoader.load('./sounds/belupacito.mp3', function (buffer) {
+                    sound.setBuffer(buffer);
+                    sound.setLoop(true);
+                    sound.setVolume(0.2);
+                    sound.setPlaybackRate(1);
+                    sound.play();
                 });
+        }
+    })
 
-				gui.add(params, 'cameraSpeed', 0.1, 10).onChange(function (val){
-					move_speed = val;
-				});
 
-				gui.add(params, 'cameraRotation', 0.01, 0.99).onChange(function (val){
-					rotate_speed = Math.PI/((1-val)*100);
-				});
+    //au relâchement
+    document.addEventListener("keyup", (e) => {
+        switch (e.code) {
+            //PERMET DE DEPLACER LA CAMERA DANS LE PLAN
 
-				gui.add( params, 'music speed', 0.1, 2 ).onChange( function ( val ) {
-					sound.setPlaybackRate(val);
-				})
+            case 'KeyW':
+                W = false;
+                break;
+            case 'KeyA':
+                A = false;
+                break;
 
-                gui.add( api, 'animation' ).onChange( function () {
+            case 'KeyS':
+                S = false;
+                break;
+            case 'KeyD':
+                D = false;
+                break;
 
-                    helper.enable( 'animation', api[ 'animation' ] );
+            //PERMET DE TOURNER LA CAMERA DANS LE PLAN
+            case 'ArrowUp':
+                UP = false;
+                break;
+            case 'ArrowLeft':
+                LEFT = false;
+                break;
+            case 'ArrowDown':
+                DOWN = false;
+                break;
+            case 'ArrowRight':
+                RIGHT = false;
+                break;
+            case 'KeyQ':
+                Q = false;
+                break;
+            case 'KeyE':
+                E = false;
+                break;
 
-                } );
 
-                gui.add( api, 'ik' ).onChange( function () {
+            //PERMET DE MONTER ET DESCENDRE DANS LE PLAN
+            case 'Space':
+                SPACE = false;
+                break;
+            case 'ShiftLeft':
+                SHIFT = false;
+                break;
 
-                    helper.enable( 'ik', api[ 'ik' ] );
+        }
+    })
 
-                } );
+	function initialConfig(){
+        //Initialisation du moteur de rendu
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-                gui.add( api, 'outline' ).onChange( function () {
+        effect = new OutlineEffect(renderer);
 
-                    effect.enabled = api[ 'outline' ];
+        //Stats
 
-                } );
+        stats = new Stats();
+        document.getElementById("container").appendChild(stats.dom);
 
-                gui.add( api, 'physics' ).onChange( function () {
+        // Gestion des ombres
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setAnimationLoop(animate);
 
-                    helper.enable( 'physics', api[ 'physics' ] );
+        window.addEventListener('resize', onWindowResize);
 
-                } );
+        // SETUP DE LA CAMERA + SCENE
 
-                gui.add( api, 'show IK bones' ).onChange( function () {
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000); // FOV 20, aspect ratio adapté à la fenêtre, distance d'affichage 1 à 10000
 
-                    ikHelper.visible = api[ 'show IK bones' ];
+        camera.position.set(0, 250, 700); // caméra reculée
+        camera.rotation.x = -0.4; // caméra regarde vers le bas
 
-                } );
+        scene = new THREE.Scene(); // création d'une scène
+	}
 
-                gui.add( api, 'show rigid bodies' ).onChange( function () {
+    function buildGui() {
 
-                    if ( physicsHelper !== undefined ) physicsHelper.visible = api[ 'show rigid bodies' ];
+        gui = new GUI();
 
-                } );
+        const params = {
+            'light color': spotLight.color.getHex(),
+            intensity: spotLight.intensity,
+            distance: spotLight.distance,
+            angle: spotLight.angle,
+            penumbra: spotLight.penumbra,
+            decay: spotLight.decay,
+            focus: spotLight.shadow.focus,
+            wireframe: wireframe,
+            cameraSpeed: move_speed,
+            cameraRotation: rotate_speed,
+            'music speed': sound.playbackRate
+        };
 
-                gui.open();
+        const api = {
+            'animation': true,
+            'ik': true,
+            'outline': true,
+            'physics': true,
+            'show IK bones': false,
+            'show rigid bodies': false
+        };
 
+
+        gui.addColor(params, 'light color').onChange(function (val) {
+
+            spotLight.color.setHex(val);
+
+        });
+
+        gui.add(params, 'intensity', 0, 2).onChange(function (val) {
+
+            spotLight.intensity = val;
+
+        });
+
+
+        gui.add(params, 'distance', 4000, 8000).onChange(function (val) {
+
+            spotLight.distance = val;
+
+        });
+
+        gui.add(params, 'angle', 0, Math.PI / 3).onChange(function (val) {
+
+            spotLight.angle = val;
+
+        });
+
+        gui.add(params, 'penumbra', 0, 1).onChange(function (val) {
+
+            spotLight.penumbra = val;
+
+        });
+
+        gui.add(params, 'decay', 1, 2).onChange(function (val) {
+
+            spotLight.decay = val;
+
+        });
+
+        gui.add(params, 'focus', 0, 1).onChange(function (val) {
+
+            spotLight.shadow.focus = val;
+
+        });
+
+        gui.add(params, 'wireframe').onChange(function (val) {
+            wireframe = val;
+            stone.map((e) => {
+                if (e instanceof THREE.Group) {
+                    e.children.map((g) => {
+                        g.material.wireframe = wireframe;
+                    })
+                } else
+                    e.material.wireframe = wireframe;
+            })
+        });
+
+        gui.add(params, 'cameraSpeed', 0.1, 10).onChange(function (val) {
+            move_speed = val;
+        });
+
+        gui.add(params, 'cameraRotation', 0.001, 0.1).onChange(function (val) {
+
+            rotate_speed = Math.PI / ((1 - val) * 100);
+        });
+
+        gui.add(params, 'music speed', 0.1, 2).onChange(function (val) {
+            sound.setPlaybackRate(val);
+        })
+
+        gui.add(api, 'animation').onChange(function () {
+
+            helper.enable('animation', api['animation']);
+
+        });
+
+        gui.add(api, 'ik').onChange(function () {
+
+            helper.enable('ik', api['ik']);
+
+        });
+
+        gui.add(api, 'outline').onChange(function () {
+
+            effect.enabled = api['outline'];
+
+        });
+
+        gui.add(api, 'physics').onChange(function () {
+
+            helper.enable('physics', api['physics']);
+
+        });
+
+        gui.add(api, 'show IK bones').onChange(function () {
+
+            ikHelper.visible = api['show IK bones'];
+
+        });
+
+        gui.add(api, 'show rigid bodies').onChange(function () {
+
+            if (physicsHelper !== undefined) physicsHelper.visible = api['show rigid bodies'];
+
+        });
+
+        gui.open();
+
+    }
+
+    function buildLight() {
+        const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambient);
+
+        spotLight = new THREE.SpotLight(0xFFFFFF, 2);
+        spotLight.position.set(1500, 2000, 0);
+        spotLight.angle = Math.PI / 4;
+        spotLight.penumbra = 0.4;
+        spotLight.decay = 2;
+        spotLight.distance = 6000;
+
+        spotLight.castShadow = true;
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+        spotLight.shadow.camera.near = 10;
+        spotLight.shadow.camera.far = 200;
+        spotLight.shadow.focus = 1;
+        scene.add(spotLight);
+    }
+
+    function buildMainScene(){
+        // PARAMETRES DES PIERRES + SOL
+
+        // EXTERIEUR
+        const stone_ext = new THREE.TextureLoader().load('./textures/stone.png');	// texture des pierres à l'extérieur
+        const material_ext = new THREE.MeshPhongMaterial({map: stone_ext}); 			// matériau basé sur cette texture
+        const geometry_ext = new THREE.BoxGeometry(30, 80, 15); 					// forme des pierres à l'extérieur
+
+        // INTERIEUR
+        const stone_int = new THREE.TextureLoader().load('./textures/stone.png'); // texture des pierres à l'intérieur
+        const material_int = new THREE.MeshPhongMaterial({map: stone_int}); // matériau basé sur cette texture
+        const tallStone_int = new THREE.BoxGeometry(30, 120, 20); // forme des pierres verticales à l'intérieur
+        const longStone_int = new THREE.BoxGeometry(60, 20, 30); // forme des pierres horizontales à l'intérieur
+
+        // MINIPIERRES
+        const stone_small = new THREE.TextureLoader().load('./textures/stone.png');
+        const material_small = new THREE.MeshPhongMaterial({map: stone_small});
+        const geometry_small = new THREE.BoxGeometry(8, 20, 4);
+
+        // SOL
+        const grass = new THREE.TextureLoader().load('./textures/ground.jpg'); // texture du sol
+        const materialGeo = new THREE.MeshPhongMaterial({map: grass}); // matériau basé sur cette texture
+        const groundGeo = new THREE.BoxGeometry(1000, 0.1, 1250); // dimensions du sol
+
+        grass.wrapS = THREE.RepeatWrapping;
+        grass.wrapT = THREE.RepeatWrapping;
+        grass.repeat.set(50, 62.5);
+
+        const ground = new THREE.Mesh(groundGeo, materialGeo); // création du sol avec les dimensions et le matériau
+        ground.rotation.y = -Math.PI * 0.5;
+        ground.position.y = 0;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        spotLight.target.position.x = ground.position.x;
+        spotLight.target.position.z = ground.position.z;
+
+        //SKYBOX
+        scene.background = new THREE.TextureLoader().load('./textures/sky3.png') // ajout du ciel
+
+
+        // PIERRES DE L'EXTERIEUR
+
+        // PILIERS
+        for (let i = 0; i < max_ext; i++) {
+            stone.push(new THREE.Mesh(geometry_ext, material_ext));
+            stone[i].material.wireframe = false;
+            stone[i].receiveShadow = true;
+            stone[i].castShadow = true;
+            stone[i].position.x = espacement * max_ext * Math.cos(i * Math.PI * 2 / max_ext);
+            stone[i].position.y = 40
+            stone[i].position.z = espacement * max_ext * Math.sin(i * Math.PI * 2 / max_ext);
+            stone[i].rotation.y = Math.PI / 2 - i * Math.PI * 2 / max_ext;
+            scene.add(stone[i]);
+        }
+
+        // DALLES
+        for (let i = 0; i < max_ext; i++) {
+            stone.push(new THREE.Mesh(geometry_ext, material_ext));
+            stone[i + max_ext].material.wireframe = false;
+            stone[i + max_ext].receiveShadow = true;
+            stone[i + max_ext].castShadow = true;
+            stone[i + max_ext].position.y = 87.5;
+            stone[i + max_ext].position.x = espacement * max_ext * Math.cos((i + 0.5) * Math.PI * 2 / max_ext);
+            stone[i + max_ext].position.z = espacement * max_ext * Math.sin((i + 0.5) * Math.PI * 2 / max_ext);
+            stone[i + max_ext].rotation.x += Math.PI / 2;
+            stone[i + max_ext].rotation.z = (i + 0.5) * Math.PI * 2 / max_ext;
+            scene.add(stone[i + max_ext]);
+        }
+
+
+        // PIERRES DE L'INTERIEUR
+
+        for (let i = 1; i < max_int; i++) {
+
+            let stone1 = new THREE.Mesh(tallStone_int, material_int);
+            stone1.position.set(35, 0, 0);
+            stone1.receiveShadow = true;
+            stone1.castShadow = true;
+            let stone2 = new THREE.Mesh(tallStone_int, material_int);
+            stone2.position.set(-35, 0, 0);
+            stone2.receiveShadow = true;
+            stone2.castShadow = true;
+            let stone3 = new THREE.Mesh(longStone_int, material_int);
+            stone3.position.set(0, 70, 0);
+            stone3.receiveShadow = true;
+            stone3.castShadow = true;
+
+            let stoneGroup = new THREE.Group();
+
+            stoneGroup.add(stone1);
+            stoneGroup.add(stone2);
+            stoneGroup.add(stone3);
+
+            stoneGroup.position.set(2 * espacement * max_int * Math.cos(i * Math.PI / (max_int / 2)), 60, 2 * espacement * max_int * Math.sin(i * Math.PI / (max_int / 2)));
+            stoneGroup.rotation.y = Math.PI / 2 - i * Math.PI / (max_int / 2);
+            stone.push(stoneGroup);
+            scene.add(stoneGroup);
+        }
+
+        //Petites pierres
+
+        for (let i = 0; i < max_small; i++) {
+
+
+            const small_stone = new THREE.Mesh(geometry_small, material_small);
+            small_stone.receiveShadow = true;
+            small_stone.castShadow = true;
+            small_stone.position.set(espacement / 5 * max_small * Math.cos(i * Math.PI / (max_small / 2)), 10, espacement / 5 * max_small * Math.sin(i * Math.PI / (max_small / 2)));
+            small_stone.rotation.y = Math.PI / 2 - i * Math.PI / (max_small / 2);
+            if (Math.floor(Math.random() * 3) !== 0) {
+                stone.push(small_stone);
+                scene.add(small_stone);
             }
 
+        }
+    }
 
-		</script>
-	</body>
+    function buildSkybox(){
+        let materialArray = [];
+        let texture_ft = new THREE.TextureLoader().load('./textures/skyseamless.jpg');
+        let texture_bk = new THREE.TextureLoader().load('./textures/skyseamless.jpg');
+        let texture_up = new THREE.TextureLoader().load('./textures/skyseamless.jpg');
+        let texture_dn = new THREE.TextureLoader().load('./textures/skyseamless.jpg');
+        let texture_rt = new THREE.TextureLoader().load('./textures/skyseamless.jpg');
+        let texture_lf = new THREE.TextureLoader().load('./textures/skyseamless.jpg');
+
+        materialArray.push(new THREE.MeshBasicMaterial({map: texture_ft}));
+        materialArray.push(new THREE.MeshBasicMaterial({map: texture_bk}));
+        materialArray.push(new THREE.MeshBasicMaterial({map: texture_up}));
+        materialArray.push(new THREE.MeshBasicMaterial({map: texture_dn}));
+        materialArray.push(new THREE.MeshBasicMaterial({map: texture_rt}));
+        materialArray.push(new THREE.MeshBasicMaterial({map: texture_lf}));
+
+        for (let i = 0; i < 6; i++)
+            materialArray[i].side = THREE.BackSide;
+
+        let skyboxGeo = new THREE.BoxGeometry(10000, 10000, 10000);
+        let skybox = new THREE.Mesh(skyboxGeo, materialArray);
+        scene.add(skybox);
+    }
+
+    function startOrbitControls(){
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.minDistance = 10;
+        controls.maxDistance = 2000;
+        controls.enablePan = false;
+        controls.maxPolarAngle = 85 * Math.PI / 180; //Maximum de rotation inférieur de 85 degrés
+        }
+
+    function doomLikeCamera(){
+        if (W) camera.translateZ(-move_speed);
+        if (A) camera.translateX(-move_speed);
+        if (S) camera.translateZ(move_speed);
+        if (D) camera.translateX(move_speed);
+
+        if (UP) camera.rotateX(rotate_speed);
+        if (LEFT) camera.rotateY(rotate_speed);
+        if (DOWN) camera.rotateX(-rotate_speed);
+        if (RIGHT) camera.rotateY(-rotate_speed);
+        if (Q) camera.rotateZ(rotate_speed);
+        if (E) camera.rotateZ(-rotate_speed);
+
+        if (SPACE) camera.translateY(move_speed);
+        if (SHIFT) camera.translateY(-move_speed);
+    }
+
+    function buildMMDModel(){
+        helper = new MMDAnimationHelper({
+            afterglow: 2.0
+        });
+        //
+        //
+        const MMD = new MMDLoader();
+        //
+        MMD.loadWithAnimation(
+            // path to PMD/PMX file
+            'models/猫又おかゆ公式mmd_ver1.0/猫又おかゆ.pmx',
+            // path to VMD file
+            ['animations/Get Down.vmd'],
+            //         // called when the resource is loaded
+            function (mmd) {
+                meshMMD = mmd.mesh
+                meshMMD.scale.set(3, 3, 3);
+                meshMMD.castShadow = true;
+                meshMMD.receiveShadow = true;
+
+                const geddan_element = document.getElementById("geddan");
+                geddan_sound.setMediaElementSource(geddan_element);
+                geddan_sound.setRefDistance(20);
+                geddan_element.play();
+                geddan_element.loop = true;
+
+                scene.add(meshMMD);
+                meshMMD.add(geddan_sound);
+                //
+                helper.add(meshMMD, {
+                    animation: mmd.animation,
+                    physics: true
+                });
+                //
+                ikHelper = helper.objects.get(meshMMD).ikSolver.createHelper();
+                ikHelper.visible = false;
+                ikHelper.scale.set(3, 3, 3);
+                scene.add(ikHelper);
+                //
+                physicsHelper = helper.objects.get(meshMMD).physics.createHelper();
+                physicsHelper.visible = false;
+                physicsHelper.scale.set(3, 3, 3);
+                scene.add(physicsHelper);
+                //
+                //
+            },
+            // called when loading is in progresses
+            function (xhr) {
+                //
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                //
+            },
+            //         // called when loading has errors
+            function () {
+                //
+                console.log('An error happened');
+                //
+            }
+            //
+        );
+    }
+
+    function loadGLTF1(){
+        const roughnessMipmapper = new RoughnessMipmapper(renderer);
+
+        const loader = new GLTFLoader();
+        loader.load('models/gltf/TEST.gltf', function (gltf) {
+
+            scene.add(gltf.scene);
+
+            mixer = new THREE.AnimationMixer(gltf.scene);
+            gltf.animations.forEach((clip) => {
+                mixer.clipAction(clip).play();
+            });
+
+            gltf.scene.traverse(function (child) {
+
+                if (child.isMesh) {
+                    roughnessMipmapper.generateMipmaps(child.material);
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            gltf.scene.position.x = 70;
+            gltf.scene.position.y = -1;
+            gltf.scene.position.z = 40;
+            gltf.scene.rotation.y -= Math.PI / 2;
+            gltf.scene.scale.set(60, 60, 60);
+
+            roughnessMipmapper.dispose();
+
+            animate();
+
+        });
+    }
+
+    function loadGLTF2(){
+        const roughnessMipmapper2 = new RoughnessMipmapper(renderer);
+
+        const loader2 = new GLTFLoader().setPath('models/gltf/Soldier/glTF/');
+        loader2.load('scene.gltf', function (gltf2) {
+
+            gltf2.scene.traverse(function (child) {
+
+                if (child.isMesh) {
+                    roughnessMipmapper2.generateMipmaps(child.material);
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            gltf2.scene.scale.set(30, 30, 30);
+            gltf2.scene.position.x = -60;
+            gltf2.scene.rotation.y += Math.PI / 2;
+            gltf2.scene.position.y = -1;
+
+            scene.add(gltf2.scene);
+
+            roughnessMipmapper2.dispose();
+
+            animate();
+
+        });
+    }
+
+
+</script>
+</body>
 </html>
