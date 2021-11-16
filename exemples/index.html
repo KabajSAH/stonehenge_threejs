@@ -17,7 +17,7 @@
 		<source src="./videos/Stonehenge.m4v" type="video/mp4">
 	</video>
 	<!-- Use a button to pause/play the video with JavaScript -->
-	<button id="myBtn">Play</button>
+	<button id="myBtn" style="display: none">Play</button>
 </div>
 
 <div id="container"></div>
@@ -38,7 +38,7 @@
     let stone = []; // tableau
     let wireframe = false;
     let spotLight, lightHelper, shadowCameraHelper, gui; // Lumières
-    let helper, ikHelper, physicsHelper, meshMMD, effect;
+    let helper, ikHelper, physicsHelper, meshMMD, animMMD, effect;
     let mixer;
 
     const listener = new THREE.AudioListener();
@@ -47,7 +47,8 @@
     const audioLoader = new THREE.AudioLoader();
     const myBtn = document.getElementById('myBtn');
 
-
+	let built = [];
+    let checkMMD = false, checkGLTF1 = false, checkGLTF2 = false;
 
     myBtn.addEventListener('click', () => {Ammo().then(function (AmmoLib) {
 
@@ -77,13 +78,15 @@
 
 
 
+    initialConfig();
+    buildGLTF1();
+    buildGLTF2();
+    buildMMDModel();
+
 
     function init() {
 
-        const content = document.getElementById('content');
-        content.remove();
 
-        initialConfig();
 
         //Lumière
 
@@ -101,27 +104,18 @@
 
         buildMainScene();
 
-        // Modèle 1 animé
-
-        buildGLTF1();
-
-
-        // Modèle 2 statique
-
-		buildGLTF2();
-
-
-
 
         // SKYBOX SELIM
 
         buildSkybox();
 
+		loadModels();
 
-        // Load a MMD model
 
-        buildMMDModel();
+        const content = document.getElementById('content');
+        content.remove();
 
+        loadConfig();
 
     }
 
@@ -280,14 +274,12 @@
         renderer = new THREE.WebGLRenderer({antialias: true});
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
 
         effect = new OutlineEffect(renderer);
 
         //Stats
 
         stats = new Stats();
-        document.getElementById("container").appendChild(stats.dom);
 
         // Gestion des ombres
         renderer.shadowMap.enabled = true;
@@ -295,7 +287,6 @@
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.setAnimationLoop(animate);
 
-        window.addEventListener('resize', onWindowResize);
 
         // SETUP DE LA CAMERA + SCENE
 
@@ -305,7 +296,16 @@
         camera.rotation.x = -0.4; // caméra regarde vers le bas
 
         scene = new THREE.Scene(); // création d'une scène
+
+        window.addEventListener('resize', onWindowResize);
 	}
+
+    function loadConfig(){
+        document.body.appendChild(renderer.domElement);
+
+        document.getElementById("container").appendChild(stats.dom);
+
+    }
 
     function buildGui() {
 
@@ -646,6 +646,7 @@
             //         // called when the resource is loaded
             function (mmd) {
                 meshMMD = mmd.mesh
+	            animMMD = mmd.animation;
                 meshMMD.scale.set(3, 3, 3);
                 meshMMD.castShadow = true;
                 meshMMD.receiveShadow = true;
@@ -656,25 +657,12 @@
                 geddan_element.play();
                 geddan_element.loop = true;
 
-                scene.add(meshMMD);
-                meshMMD.add(geddan_sound);
-                //
-                helper.add(meshMMD, {
-                    animation: mmd.animation,
-                    physics: true
-                });
-                //
-                ikHelper = helper.objects.get(meshMMD).ikSolver.createHelper();
-                ikHelper.visible = false;
-                ikHelper.scale.set(3, 3, 3);
-                scene.add(ikHelper);
-                //
-                physicsHelper = helper.objects.get(meshMMD).physics.createHelper();
-                physicsHelper.visible = false;
-                physicsHelper.scale.set(3, 3, 3);
-                scene.add(physicsHelper);
+
                 //
                 //
+                //
+	            checkMMD = true;
+                checkLoading();
             },
             // called when loading is in progresses
             function (xhr) {
@@ -698,7 +686,6 @@
         const loader = new GLTFLoader();
         loader.load('models/gltf/TEST.gltf', function (gltf) {
 
-            scene.add(gltf.scene);
 
             mixer = new THREE.AnimationMixer(gltf.scene);
             gltf.animations.forEach((clip) => {
@@ -720,9 +707,13 @@
             gltf.scene.rotation.y -= Math.PI / 2;
             gltf.scene.scale.set(60, 60, 60);
 
+
+			built.push(gltf.scene);
+
             roughnessMipmapper.dispose();
 
-            animate();
+            checkGLTF1 = true;
+            checkLoading();
 
         });
     }
@@ -747,15 +738,54 @@
             gltf2.scene.rotation.y += Math.PI / 2;
             gltf2.scene.position.y = -1;
 
-            scene.add(gltf2.scene);
+            built.push(gltf2.scene);
 
             roughnessMipmapper2.dispose();
 
-            animate();
+            checkGLTF2 = true;
+            checkLoading();
+
 
         });
     }
 
+    function loadModels(){
+
+		loadMMD();
+
+        built.map( (e) => {
+            scene.add(e);
+        })
+
+    }
+
+    function loadMMD(){
+
+        scene.add(meshMMD);
+        meshMMD.add(geddan_sound);
+        //
+        helper.add(meshMMD, {
+            animation: animMMD,
+            physics: true
+        });
+
+        ikHelper = helper.objects.get(meshMMD).ikSolver.createHelper();
+        ikHelper.visible = false;
+        ikHelper.scale.set(3, 3, 3);
+        //
+        physicsHelper = helper.objects.get(meshMMD).physics.createHelper();
+        physicsHelper.visible = false;
+        physicsHelper.scale.set(3, 3, 3);
+
+        scene.add(ikHelper);
+        scene.add(physicsHelper);
+    }
+
+    function checkLoading(){
+        if(checkMMD && checkGLTF1 && checkGLTF2){
+			document.getElementById("myBtn").style.display = "block";
+        }
+    }
 
 </script>
 </body>
