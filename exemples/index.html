@@ -103,12 +103,12 @@
 
         // Modèle 1 animé
 
-        loadGLTF1();
+        buildGLTF1();
 
 
         // Modèle 2 statique
 
-		loadGLTF2();
+		buildGLTF2();
 
 
 
@@ -692,7 +692,7 @@
         );
     }
 
-    function loadGLTF1(){
+    function buildGLTF1(){
         const roughnessMipmapper = new RoughnessMipmapper(renderer);
 
         const loader = new GLTFLoader();
@@ -727,7 +727,7 @@
         });
     }
 
-    function loadGLTF2(){
+    function buildGLTF2(){
         const roughnessMipmapper2 = new RoughnessMipmapper(renderer);
 
         const loader2 = new GLTFLoader().setPath('models/gltf/Soldier/glTF/');
