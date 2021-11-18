@@ -12,6 +12,10 @@
 	<source src="sounds/geddan.mp3" type="audio/mpeg">
 </audio>
 
+<audio id="insults" preload="auto" style="display: none">
+	<source src="sounds/DeSesMorts.mp3" type="audio/mpeg">
+</audio>
+
 <div id="content" class="content">
 	<video autoplay muted loop id="myVideo">
 		<source src="./videos/Stonehenge.m4v" type="video/mp4">
@@ -44,6 +48,7 @@
     const listener = new THREE.AudioListener();
     const sound = new THREE.Audio(listener);
     const geddan_sound = new THREE.PositionalAudio(listener);
+	const insults = new THREE.PositionalAudio(listener);
     const audioLoader = new THREE.AudioLoader();
     const myBtn = document.getElementById('myBtn');
 
@@ -504,8 +509,14 @@
         //SKYBOX
         scene.background = new THREE.TextureLoader().load('./textures/sky3.png') // ajout du ciel
 
+		//STONE POSITIONAL AUDIO
 
-        // PIERRES DE L'EXTERIEUR
+		insults.setMediaElementSource(document.getElementById("insults"));
+		insults.setRefDistance(5);
+
+		var ranStone = Math.floor(Math.random() * max_ext); //Choisis une pierre aléatoire parmis les pierres externes
+
+		// PIERRES DE L'EXTERIEUR
 
         // PILIERS
         for (let i = 0; i < max_ext; i++) {
@@ -518,6 +529,11 @@
             stone[i].position.z = espacement * max_ext * Math.sin(i * Math.PI * 2 / max_ext);
             stone[i].rotation.y = Math.PI / 2 - i * Math.PI * 2 / max_ext;
             scene.add(stone[i]);
+			if (i === ranStone){//Si c'est le pillier a été choisis comme étant celui qui a le son
+				stone[i].add(insults);
+				insults.play();
+				insults.loop = true;
+			}
         }
 
         // DALLES
