@@ -276,6 +276,7 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         effect = new OutlineEffect(renderer);
+        effect.enable = false;
 
         //Stats
 
@@ -634,6 +635,7 @@
         helper = new MMDAnimationHelper({
             afterglow: 2.0
         });
+        helper.enable('physics', false);
         //
         //
         const MMD = new MMDLoader();
@@ -651,11 +653,7 @@
                 meshMMD.castShadow = true;
                 meshMMD.receiveShadow = true;
 
-                const geddan_element = document.getElementById("geddan");
-                geddan_sound.setMediaElementSource(geddan_element);
-                geddan_sound.setRefDistance(20);
-                geddan_element.play();
-                geddan_element.loop = true;
+
 
 
                 //
@@ -768,6 +766,12 @@
             animation: animMMD,
             physics: true
         });
+
+        const geddan_element = document.getElementById("geddan");
+        geddan_sound.setMediaElementSource(geddan_element);
+        geddan_sound.setRefDistance(20);
+        geddan_element.play();
+        geddan_element.loop = true;
 
         ikHelper = helper.objects.get(meshMMD).ikSolver.createHelper();
         ikHelper.visible = false;
