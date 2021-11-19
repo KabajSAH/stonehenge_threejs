@@ -511,8 +511,9 @@
 
 		//STONE POSITIONAL AUDIO
 
-		insults.setMediaElementSource(document.getElementById("insults"));
-		insults.setRefDistance(5);
+		const insultsDiv = document.getElementById('insults');
+		insults.setMediaElementSource(insultsDiv);
+		insults.setRefDistance(1);
 
 		var ranStone = Math.floor(Math.random() * max_ext); //Choisis une pierre aléatoire parmis les pierres externes
 
@@ -531,8 +532,8 @@
             scene.add(stone[i]);
 			if (i === ranStone){//Si c'est le pillier a été choisis comme étant celui qui a le son
 				stone[i].add(insults);
-				insults.play();
-				insults.loop = true;
+				insultsDiv.play();
+				insultsDiv.loop = true;
 			}
         }
 
