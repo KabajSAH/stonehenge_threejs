@@ -81,6 +81,8 @@
     let W = false, S = false, A = false, D = false, E = false, Q = false, UP = false, DOWN = false, LEFT = false,
         RIGHT = false, SPACE = false, SHIFT = false;
 
+	let analyserInsults = new THREE.AudioAnalyser(insults, 32);
+	let shadedStone; //Pierre avec shader dépendant de l'analyzer
 
 
     initialConfig();
@@ -148,6 +150,9 @@
 
         //Camera Collision with the ground
         if (camera.position.y < 3) camera.position.y = 3;
+
+		if (typeof (shadedStone) != 'undefined')
+			shadedStone.emissive.b = analyserInsults.getAverageFrequency()/256;
 
         effect.render(scene,camera);
 
@@ -474,6 +479,7 @@
 
         // EXTERIEUR
         const stone_ext = new THREE.TextureLoader().load('./textures/stone.png');	// texture des pierres à l'extérieur
+		shadedStone = new THREE.MeshPhongMaterial({map: stone_ext});
         const material_ext = new THREE.MeshPhongMaterial({map: stone_ext}); 			// matériau basé sur cette texture
         const geometry_ext = new THREE.BoxGeometry(30, 80, 15); 					// forme des pierres à l'extérieur
 
@@ -521,7 +527,9 @@
 
         // PILIERS
         for (let i = 0; i < max_ext; i++) {
-            stone.push(new THREE.Mesh(geometry_ext, material_ext));
+
+			if (i !== ranStone) stone.push(new THREE.Mesh(geometry_ext, material_ext));
+			else stone.push(new THREE.Mesh(geometry_ext, shadedStone));
             stone[i].material.wireframe = false;
             stone[i].receiveShadow = true;
             stone[i].castShadow = true;
