@@ -56,6 +56,7 @@
     let checkMMD = false, checkGLTF1 = false, checkGLTF2 = false;
 
     let geddan_bool = true;
+    let geddan_element;
 
     myBtn.addEventListener('click', () => {Ammo().then(function (AmmoLib) {
 
@@ -419,9 +420,9 @@
 
 	    gui.add(params, 'play geddan').onChange(function(val){
             if(val){
-                geddan_sound.pause();
+                geddan_element.play();
             }else{
-                geddan_sound.play();
+                geddan_element.pause();
             }
 	    })
 
@@ -803,7 +804,7 @@
             physics: true
         });
 
-        const geddan_element = document.getElementById("geddan");
+        geddan_element = document.getElementById("geddan");
         geddan_sound.setMediaElementSource(geddan_element);
         geddan_sound.setRefDistance(15);
         geddan_element.play();
