@@ -55,6 +55,8 @@
 	let built = [];
     let checkMMD = false, checkGLTF1 = false, checkGLTF2 = false;
 
+    let geddan_bool = true;
+
     myBtn.addEventListener('click', () => {Ammo().then(function (AmmoLib) {
 
         Ammo = AmmoLib;
@@ -333,7 +335,8 @@
             wireframe: wireframe,
             cameraSpeed: move_speed,
             cameraRotation: rotate_speed,
-            'music speed': sound.playbackRate
+            'music speed': sound.playbackRate,
+	        'play geddan': geddan_bool
         };
 
         const api = {
@@ -413,6 +416,14 @@
         gui.add(params, 'music speed', 0.1, 2).onChange(function (val) {
             sound.setPlaybackRate(val);
         })
+
+	    gui.add(params, 'play geddan').onChange(function(val){
+            if(val){
+                geddan_sound.pause();
+            }else{
+                geddan_sound.play();
+            }
+	    })
 
         gui.add(api, 'animation').onChange(function () {
 
